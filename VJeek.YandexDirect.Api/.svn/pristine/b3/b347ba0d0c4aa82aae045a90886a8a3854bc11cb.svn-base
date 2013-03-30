@@ -1,0 +1,31 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Text;
+using Newtonsoft.Json;
+using VJeek_YandexDirect.Api.Banners;
+using VJeek_YandexDirect.Api.Campaigns;
+using VJeek_YandexDirect.Api.Clients;
+using VJeek_YandexDirect.Api.OAuth;
+
+namespace VJeek_YandexDirect.Api
+{
+    public interface IYandexClient
+    {
+        string AuthToken { get; set; }
+        string Login { get; set; }
+        IEnumerable<ClientInfo> GetClientInfo(IEnumerable<string> logins);
+        IEnumerable<ShortCampaignInfo> GetCampaignList(IEnumerable<string> logins);
+        IEnumerable<ShortCampaignInfo> GetCampaignsListFilter(GetCampaignsInfo filter);
+        IEnumerable<BannerInfo> GetBanners(GetBannersInfo filter);
+        void GetBanners();
+
+        IEnumerable<int> CreateOrUpdateBanners(IEnumerable<BannerInfo> banners);
+        int StopBanners(CampaignBidsInfo info);
+        int ArchiveBanners(CampaignBidsInfo info);
+
+        AccessTokenResponse GetAuthToken(string confirmationCode);
+    }
+}

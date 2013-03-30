@@ -1,0 +1,194 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.Composition;
+using System.IO;
+using System.Net;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using VJeek.YandexDirect.Api.Banners;
+using VJeek.YandexDirect.Api.Campaigns;
+using VJeek.YandexDirect.Api.Clients;
+using VJeek.YandexDirect.Api.Errors;
+using VJeek.YandexDirect.Api.OAuth;
+using log4net;
+
+namespace VJeek.YandexDirect.Api
+{
+    [Export(typeof(IYandexClient))]
+    [PartCreationPolicy(CreationPolicy.NonShared)]
+    public class JsonClient : IYandexClient
+    {
+        public static ILog _logger = LogManager.GetLogger(typeof(JsonClient));
+        private string _applicationId;
+        private string _authToken;
+        private string _applicationSecret;
+        private string _login;
+
+        public string AuthToken { get { return _authToken; } set { _authToken = value; } }
+        public string Login { get { return _login; } set { _login = value; } }
+
+        public JsonClient()
+        {
+            _applicationId = System.Configuration.ConfigurationManager.AppSettings["YandexDirectApplicationId"];
+            _applicationSecret = System.Configuration.ConfigurationManager.AppSettings["YandexDirectApplicationSecret"];
+        }
+
+        public JsonClient(string applicationId, string applicationSecret, string authToken)
+        {
+            if (string.IsNullOrEmpty(applicationId))
+                throw new ArgumentNullException("applicationId");
+            if (string.IsNullOrEmpty(authToken) && string.IsNullOrEmpty(applicationSecret))
+                throw new ArgumentNullException("authToken");
+
+            _applicationId = applicationId;
+            _authToken = authToken;
+            _applicationSecret = applicationSecret;
+        }
+
+        public IEnumerable<ClientInfo> GetClientInfo(IEnumerable<string> logins)
+        {
+            var request = JObject.FromObject(new
+            {
+                method = "GetClientInfo",
+                param = logins
+            });
+            return ExecuteRequest<IEnumerable<ClientInfo>>(request);
+        }
+
+        public IEnumerable<ShortCampaignInfo> GetCampaignList(IEnumerable<string> logins)
+        {
+            var request = JObject.FromObject(new
+                                                 {
+                                                     method = "GetCampaignsList",
+                                                     param = logins
+                                                 });
+            return ExecuteRequest<IEnumerable<ShortCampaignInfo>>(request);
+        }
+
+        public IEnumerable<ShortCampaignInfo> GetCampaignsListFilter(GetCampaignsInfo filter)
+        {
+            var request = JObject.FromObject(new
+            {
+                method = "GetCampaignsListFilter",
+                param = filter
+            });
+            return ExecuteRequest<IEnumerable<ShortCampaignInfo>>(request);
+        }
+
+        public IEnumerable<BannerInfo> GetBanners(GetBannersInfo filter)
+        {
+            var request = JObject.FromObject(new
+                                                 {
+                                                     method = "GetBanners",
+                                                     param = filter
+                                                 });
+            return ExecuteRequest<IEnumerable<BannerInfo>>(request);
+        }
+
+        public void GetBanners()
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<int> CreateOrUpdateBanners(IEnumerable<BannerInfo> banners)
+        {
+            var request = JObject.FromObject(new
+            {
+                method = "CreateOrUpdateBanners",
+                param = banners
+            });
+            return ExecuteRequest<IEnumerable<int>>(request);
+        }
+        public int StopBanners(CampaignBidsInfo info)
+        {
+            var request = JObject.FromObject(new
+            {
+                method = "StopBanners",
+                param = info
+            });
+            return ExecuteRequest<int>(request);
+        }
+        public int ArchiveBanners(CampaignBidsInfo info)
+        {
+            var request = JObject.FromObject(new
+            {
+                method = "ArchiveBanners",
+                param = info
+            });
+            return ExecuteRequest<int>(request);
+        }
+        public AccessTokenResponse GetAuthToken(string confirmationCode)
+        {
+            if (string.IsNullOrEmpty(_applicationId))
+                throw new ArgumentNullException("applicationId");
+            if (string.IsNullOrEmpty(_applicationSecret))
+                throw new ArgumentNullException("_applicationSecret");
+            var request = (HttpWebRequest)WebRequest.Create(new Uri("https://oauth.yandex.ru/token", UriKind.Absolute));
+            request.Method = "POST";
+            request.ContentType = "application/x-www-form-urlencoded";
+            var requestStream = request.GetRequestStream();
+            using (StreamWriter writer = new StreamWriter(requestStream))
+            {
+                writer.Write(string.Format("grant_type=authorization_code&code={0}&client_id={1}&client_secret={2}", confirmationCode, _applicationId, _applicationSecret));
+            }
+            var response = request.GetResponse();
+            var stream = response.GetResponseStream();
+            var reader = new StreamReader(stream);
+            var result = reader.ReadToEnd();
+            //"{\"access_token\": \"3d10443883a344a0b171ce557545a936\", \"token_type\": \"bearer\"}"
+
+            return JsonConvert.DeserializeObject<AccessTokenResponse>(result);
+        }
+
+        public T ExecuteRequest<T>(JObject obj)
+        {
+            if (string.IsNullOrEmpty(_applicationId))
+                throw new ArgumentNullException("applicationId");
+            if (string.IsNullOrEmpty(_authToken))
+                throw new ArgumentNullException("authToken");
+
+            obj.Add(new JProperty("locale", "ru"));
+            obj.Add(new JProperty("login", _login));
+            obj.Add(new JProperty("application_id", _applicationId));
+            obj.Add(new JProperty("token", _authToken));
+
+            var jsonObject = JsonConvert.SerializeObject(obj);
+
+            JsonResult<T> jsonResult = null;
+
+            var request =
+                (HttpWebRequest)
+                //WebRequest.Create(new Uri("https://soap.direct.yandex.ru/json-api/v4/", UriKind.Absolute));
+				WebRequest.Create(new Uri(System.Configuration.ConfigurationManager.AppSettings["YandexDirectAPIUrl"], UriKind.Absolute));
+            request.ReadWriteTimeout = 600000;
+            request.Timeout = 600000;
+            request.Method = "POST";
+            request.ContentType = "application/json; charset=utf-8";
+            var requestStream = request.GetRequestStream();
+            using (StreamWriter writer = new StreamWriter(requestStream))
+            {
+
+                writer.Write(jsonObject);
+            }
+
+            using (var response = request.GetResponse())
+            {
+                var stream = response.GetResponseStream();
+                var reader = new StreamReader(stream);
+                var result = reader.ReadToEnd();
+                if (result.Contains("error_code"))
+                {
+                    var error = JsonConvert.DeserializeObject<ErrorResult>(result);
+                    throw new YandexAPIException(error);
+                }
+                jsonResult = JsonConvert.DeserializeObject<JsonResult<T>>(result);
+            }
+
+
+            return jsonResult.data;
+        }
+
+
+
+    }
+}

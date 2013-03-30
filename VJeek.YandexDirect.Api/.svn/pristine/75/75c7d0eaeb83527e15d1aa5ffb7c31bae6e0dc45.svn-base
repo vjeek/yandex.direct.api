@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace VJeek_YandexDirect.Api.Campaigns
+{
+    public class GetCampaignsInfo
+    {
+        public IEnumerable<string> Logins { get; set; }
+        public CampaignsFilterInfo Filter { get; set; }
+
+        public int? Limit { get; set; }
+
+        public int? Offset { get; set; }
+    }
+}

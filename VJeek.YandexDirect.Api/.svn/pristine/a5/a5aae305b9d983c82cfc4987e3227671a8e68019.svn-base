@@ -1,0 +1,115 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
+namespace VJeek_YandexDirect.Api.Banners
+{
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum StatusArchive : int
+    {
+        Yes,
+        No
+    }
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum StatusActivating : int
+    {
+        Yes,
+        No,
+        Pending
+    }
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum StatusBannerModerate : int
+    {
+        Yes,
+        No,
+        New,
+        Pending,
+        PreliminaryAccept
+    }
+
+    public enum StatusPhrasesModerate : int
+    {
+        New, Pending, Yes, No, PreliminaryAccept
+    }
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum StatusPhoneModerate:int
+    {
+        New,
+        Pending,
+        Yes,
+        No
+    }
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum StatusShow:int
+    {
+        Yes,
+        No
+    }
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum IsActive : int
+    {
+        Yes,
+        No
+    }
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum  StatusSitelinksModerate:int
+    {
+        New,
+        Pending,
+        Yes,
+        No
+    }
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum FixedOnModeration:int
+    {
+        Yes,
+        No
+    }
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum IsRubric
+    {
+        Yes,
+        No
+    }
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum LowCTRWarning
+    {
+        Yes,
+        No
+    }
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum LowCTR
+    {
+        Yes,
+        No
+    }
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum ContextLowCTR
+    {
+        Yes,
+        No
+    }
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum AutoBroker
+    {
+        Yes,
+        No
+    }
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum AutoBudgetPriority
+    {
+        Low,
+        Medium,
+        high
+    }
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum GetPhrases
+    {
+        No,
+        Yes,
+        WithPrices
+    }
+}

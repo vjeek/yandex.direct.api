@@ -1,0 +1,13 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Newtonsoft.Json;
+
+namespace VJeek_YandexDirect.Api
+{
+    public class JsonResult<T>
+    {
+        public T data { get; set; }
+    }
+}
